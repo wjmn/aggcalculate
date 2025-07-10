@@ -1,0 +1,14 @@
+{
+  "main.css": "https://wjmn.github.io/aggcalculate/static/css/main.2be63878.chunk.css",
+  "main.js": "https://wjmn.github.io/aggcalculate/static/js/main.babbc17c.chunk.js",
+  "main.js.map": "https://wjmn.github.io/aggcalculate/static/js/main.babbc17c.chunk.js.map",
+  "runtime~main.js": "https://wjmn.github.io/aggcalculate/static/js/runtime~main.a63d4e96.js",
+  "runtime~main.js.map": "https://wjmn.github.io/aggcalculate/static/js/runtime~main.a63d4e96.js.map",
+  "vendors~main.js": "https://wjmn.github.io/aggcalculate/static/js/vendors~main.ded87515.chunk.js",
+  "vendors~main.js.map": "https://wjmn.github.io/aggcalculate/static/js/vendors~main.ded87515.chunk.js.map",
+  "./service-worker.js": "https://wjmn.github.io/aggcalculate/./service-worker.js",
+  "index.html": "https://wjmn.github.io/aggcalculate/index.html",
+  "logo.svg": "https://wjmn.github.io/aggcalculate/logo.svg",
+  "manifest.json": "https://wjmn.github.io/aggcalculate/manifest.json",
+  "precache-manifest.276c6371954309cbc2533a0bb2a27f5c.js": "https://wjmn.github.io/aggcalculate/precache-manifest.276c6371954309cbc2533a0bb2a27f5c.js"
+}
