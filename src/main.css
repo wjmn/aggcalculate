@@ -1,0 +1,105 @@
+/*
+  elm-hot creates an additional div wrapper around the app to make HMR possible.
+  This could break styling in development mode if you are using Elm UI.
+
+  More context in the issue:
+    https://github.com/halfzebra/create-elm-app/issues/320
+*/
+[data-elm-hot="true"] {
+  height: inherit;
+}
+
+html {
+  box-sizing: border-box;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+}
+
+
+.container {
+  width: 100%;
+  display: flex;
+  height: 100%;
+}
+
+.left-panel {
+  width: 30%;
+  padding: 1rem;
+  border-right: 1px solid black;
+  height: 100%;
+  min-height: 100vh;
+}
+
+h1 {
+  margin: 0;
+  margin-bottom: 1rem;
+}
+
+.right-panel {
+  flex-grow: 1;
+  width: 60%;
+  padding: 1rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+label {
+  font-weight: bold;
+  color: #333;
+}
+
+input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #ccc;
+}
+
+.row-item {
+  display: flex;
+  width: 100%;
+}
+
+.row-item > input {
+  width: 100%;
+}
+
+.passed {
+  margin-bottom: 2rem;
+  background: oklch(84.5% 0.143 164.978);
+  padding: 1rem;
+  margin-right: 2rem;
+  font-size: 1.2rem;
+}
+
+.passed > h2 {
+  margin: 0;
+  margin-bottom: 1rem;
+}
+
+.failed {
+  border: 1px solid gray;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  margin-right: 2rem;
+  background: #ddd;
+  color: #555;
+}
