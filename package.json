@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  },
+  "scripts": {
+    "predeploy": "PUBLIC_URL=https://wjmn.github.io/aggcalculate/ elm-app build",
+    "deploy": "gh-pages -d build"
+  }
+}

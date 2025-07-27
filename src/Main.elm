@@ -87,6 +87,27 @@ permutations list =
     List.foldl (\x accum -> List.concatMap (inserts x) accum) [ [] ] list
 
 
+-- If a list is smaller than size n, produce all possible lists of size n composed of the elements of the list
+fillToSize : Int -> List a -> List (List a)
+fillToSize n xs =
+    let
+        -- recursive helper function to fill the list to size n
+        recHelper remainingIterations accumulatedLLists = 
+            if remainingIterations <= 0 then
+                accumulatedLLists
+            else
+                let
+                    newLists =
+                        List.concatMap (\l -> List.map (\x -> l ++ [ x ]) xs) accumulatedLLists
+                in
+                recHelper (remainingIterations - 1) newLists
+    in
+    
+    if List.length xs >= n then
+        [ xs ]
+    else
+        recHelper (n - List.length xs) [xs]
+
 
 ---- UPDATE ----
 
@@ -107,52 +128,62 @@ type Msg
 
 calculateFromModel : Model -> List CalculatedResult
 calculateFromModel model =
-    let
-        -- Produce all possible pairs of A and T peaks
-        pairedPeakList =
-            permutations model.aPeaks
-                |> List.map (\aPerm -> List.map2 (\aPeak tPeak -> { aPeak = aPeak, tPeak = tPeak }) aPerm model.tPeaks)
+    if model.aPeaks == [] && model.tPeaks == [] then
+        []
+    else
+        let
+            maxPeakCount =
+                Basics.max (List.length model.aPeaks) (List.length model.tPeaks)
+            filledAPeaks =
+                fillToSize maxPeakCount model.aPeaks
+            filledTPeaks =
+                fillToSize maxPeakCount model.tPeaks
+            -- Produce all possible pairs of A and T peaks
+            aPeakPermutations = 
+                List.concatMap permutations filledAPeaks
+            pairedPeakList =
+                filledTPeaks
+                    |> List.concatMap (\tPeaks -> List.map (\aPerm -> List.map2 (\aPeak tPeak -> { aPeak = aPeak, tPeak = tPeak }) aPerm tPeaks) aPeakPermutations)
 
-        evaluatePairedPeaks pairedPeaks =
-            let
-                pairedDistances =
-                    List.map (\p -> ( (p.aPeak - toFloat model.aBase) / 3, (p.tPeak - toFloat model.tBase) / 3 )) pairedPeaks
+            evaluatePairedPeaks pairedPeaks =
+                let
+                    pairedDistances =
+                        List.map (\p -> ( (p.aPeak - toFloat model.aBase) / 3, (p.tPeak - toFloat model.tBase) / 3 )) pairedPeaks
 
-                calculatedAlleleSizes =
-                    List.map (\( aDist, tDist ) -> aDist + tDist + 1) pairedDistances
+                    calculatedAlleleSizes =
+                        List.map (\( aDist, tDist ) -> aDist + tDist + 1) pairedDistances
 
-                sortedAlleles =
-                    List.sort calculatedAlleleSizes
+                    sortedAlleles =
+                        List.sort calculatedAlleleSizes
 
-                -- Find the number of gaps between consecutive alleles that exceed 3
-                gaps =
-                    List.length <| List.filter (\( a, b ) -> b - a > 3) (List.map2 Tuple.pair sortedAlleles (List.drop 1 sortedAlleles))
+                    -- Find the number of gaps between consecutive alleles that exceed 3
+                    gaps =
+                        List.length <| List.filter (\( a, b ) -> b - a > 3) (List.map2 Tuple.pair sortedAlleles (List.drop 1 sortedAlleles))
 
-                -- For each calculated allele size, find the minimum of that size with each model allele size
-                minDiffs =
-                    List.map (\size -> Basics.min (abs (toFloat model.allele1Size - size)) (abs (toFloat model.allele2Size - size))) calculatedAlleleSizes
+                    -- For each calculated allele size, find the minimum of that size with each model allele size
+                    minDiffs =
+                        List.map (\size -> Basics.min (abs (toFloat model.allele1Size - size)) (abs (toFloat model.allele2Size - size))) calculatedAlleleSizes
 
-                evaluatedResult =
-                    if gaps > 1 then
-                        FailedNumberUniqueAlleles sortedAlleles
+                    evaluatedResult =
+                        if gaps > 1 then
+                            FailedNumberUniqueAlleles sortedAlleles
 
-                    else if List.any (\diff -> diff > 3) minDiffs then
-                        FailedAlleleSizeMatching sortedAlleles
+                        else if List.any (\diff -> diff > 2) minDiffs then
+                            FailedAlleleSizeMatching sortedAlleles
 
-                    else
-                        PassedCheckWithScore (List.sum minDiffs / toFloat (List.length minDiffs))
-            in
-            { pairedPeaks = List.sortBy .aPeak pairedPeaks
-            , pairedDistances = List.sort pairedDistances
-            , calculatedAlleleSizes = List.sort calculatedAlleleSizes
-            , evaluation = evaluatedResult
-            }
-    in
-    pairedPeakList
-        |> List.map evaluatePairedPeaks
-        |> List.Extra.unique
-        |> List.sortBy (.evaluation >> rank)
-
+                        else
+                            PassedCheckWithScore (List.sum minDiffs / toFloat (List.length minDiffs))
+                in
+                { pairedPeaks = List.sortBy .aPeak pairedPeaks
+                , pairedDistances = List.sort pairedDistances
+                , calculatedAlleleSizes = List.sort calculatedAlleleSizes
+                , evaluation = evaluatedResult
+                }
+        in
+        pairedPeakList
+            |> List.map evaluatePairedPeaks
+            |> List.Extra.unique
+            |> List.sortBy (.evaluation >> rank)
 
 withNewCalculatedResult : Model -> Model
 withNewCalculatedResult model =
@@ -390,12 +421,24 @@ viewResult model result =
                         [ text <| "The " ++ String.fromInt size ++ " repeat allele has AGG interruptions at position(s): " ++ 
                             String.join ", " (List.map String.fromInt interrupts)
                         ]
-                _ = Debug.log "" groupedPairedDistances
             in
             
             div [class "passed" ]
                 [ h2 [] [ text "Valid AGG Interruption Result" ]
                 , div [] (List.map viewSizeAndInterrupts groupedPairedDistances)
+                , div [class "passed-details"] 
+                    [ text <| "Evaluation Score (lower is better): " ++ String.fromFloat score
+                    , br [] []
+                    , text "Paired peaks: ", 
+                      text <| String.join ", " (List.map (\p -> "(" ++ String.fromFloat p.aPeak ++ ", " ++ String.fromFloat p.tPeak ++ ")") result.pairedPeaks)
+                    , br [] []
+                    , text "Paired Distances: ",
+                      text <| String.join ", " (List.map (\(a, t) -> "(" ++ String.fromFloat a ++ ", " ++ String.fromFloat t ++ ")") result.pairedDistances)
+                    , br [] []
+                    , text "Calculated Allele Sizes: ",
+                      text <| String.join ", " (List.map String.fromFloat result.calculatedAlleleSizes)
+                    , br [] []
+                    ]
                 ]
 
 

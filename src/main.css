@@ -93,6 +93,7 @@ button:hover {
 .passed > h2 {
   margin: 0;
   margin-bottom: 1rem;
+  font-size: 1.3rem;
 }
 
 .failed {
@@ -102,4 +103,10 @@ button:hover {
   margin-right: 2rem;
   background: #ddd;
   color: #555;
+}
+
+.passed-details {
+  font-size: 0.8em;
+  margin-top: 0.5rem;
+  opacity: 0.8;
 }
