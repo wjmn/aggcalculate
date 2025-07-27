@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "c2f5922a510df9a0c10d1ed754d954c0",
+    "revision": "ed3c59721a2bbbbcfd0fd6a8df9a3703",
     "url": "https://wjmn.github.io/aggcalculate/index.html"
   },
   {
@@ -12,12 +12,12 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "https://wjmn.github.io/aggcalculate/manifest.json"
   },
   {
-    "revision": "babbc17c1faa7a7d32b4",
-    "url": "https://wjmn.github.io/aggcalculate/static/css/main.2be63878.chunk.css"
+    "revision": "1ccc5491723ac3f889d4",
+    "url": "https://wjmn.github.io/aggcalculate/static/css/main.c279af8f.chunk.css"
   },
   {
-    "revision": "babbc17c1faa7a7d32b4",
-    "url": "https://wjmn.github.io/aggcalculate/static/js/main.babbc17c.chunk.js"
+    "revision": "1ccc5491723ac3f889d4",
+    "url": "https://wjmn.github.io/aggcalculate/static/js/main.1ccc5491.chunk.js"
   },
   {
     "revision": "a63d4e9646f5bfb41f95",
