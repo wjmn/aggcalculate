@@ -1,14 +1,14 @@
 {
-  "main.css": "https://wjmn.github.io/aggcalculate/static/css/main.c279af8f.chunk.css",
-  "main.js": "https://wjmn.github.io/aggcalculate/static/js/main.1ccc5491.chunk.js",
-  "main.js.map": "https://wjmn.github.io/aggcalculate/static/js/main.1ccc5491.chunk.js.map",
-  "runtime~main.js": "https://wjmn.github.io/aggcalculate/static/js/runtime~main.a63d4e96.js",
-  "runtime~main.js.map": "https://wjmn.github.io/aggcalculate/static/js/runtime~main.a63d4e96.js.map",
-  "vendors~main.js": "https://wjmn.github.io/aggcalculate/static/js/vendors~main.ded87515.chunk.js",
-  "vendors~main.js.map": "https://wjmn.github.io/aggcalculate/static/js/vendors~main.ded87515.chunk.js.map",
-  "./service-worker.js": "https://wjmn.github.io/aggcalculate/./service-worker.js",
-  "index.html": "https://wjmn.github.io/aggcalculate/index.html",
-  "logo.svg": "https://wjmn.github.io/aggcalculate/logo.svg",
-  "manifest.json": "https://wjmn.github.io/aggcalculate/manifest.json",
-  "precache-manifest.8a16f67982bfea15dae6b48b23eb1df9.js": "https://wjmn.github.io/aggcalculate/precache-manifest.8a16f67982bfea15dae6b48b23eb1df9.js"
+  "main.css": "/static/css/main.2ab0c9b6.chunk.css",
+  "main.js": "/static/js/main.16966ab4.chunk.js",
+  "main.js.map": "/static/js/main.16966ab4.chunk.js.map",
+  "runtime~main.js": "/static/js/runtime~main.1b922744.js",
+  "runtime~main.js.map": "/static/js/runtime~main.1b922744.js.map",
+  "vendors~main.js": "/static/js/vendors~main.ded87515.chunk.js",
+  "vendors~main.js.map": "/static/js/vendors~main.ded87515.chunk.js.map",
+  "./service-worker.js": "/./service-worker.js",
+  "index.html": "/index.html",
+  "logo.svg": "/logo.svg",
+  "manifest.json": "/manifest.json",
+  "precache-manifest.361a8f26540120886ac911d82aec2c31.js": "/precache-manifest.361a8f26540120886ac911d82aec2c31.js"
 }
