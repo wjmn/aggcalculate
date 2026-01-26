@@ -108,6 +108,21 @@ fillToSize n xs =
     else
         recHelper (n - List.length xs) [xs]
 
+toGroupedString : Int -> List Int -> String
+toGroupedString size interruptions = 
+    case interruptions of 
+        [] -> 
+            "(CGG)" ++ String.fromInt size 
+        head :: rest -> 
+            let
+                initials = 
+                    head :: (List.map2 (-) (List.drop 1 interruptions) interruptions)
+                    |> List.map (\x -> "(CGG)" ++ String.fromInt (x-1) ++ " AGG")
+                    |> String.join " "
+                remainder = 
+                    " (CGG)" ++ String.fromInt (size - Maybe.withDefault 0 (List.maximum interruptions))
+            in
+            initials ++ remainder
 
 ---- UPDATE ----
 
@@ -148,10 +163,11 @@ calculateFromModel model =
             evaluatePairedPeaks pairedPeaks =
                 let
                     pairedDistances =
-                        List.map (\p -> ( (p.aPeak - toFloat model.aBase) / 3, (p.tPeak - toFloat model.tBase) / 3 )) pairedPeaks
+                        -- List.map (\p -> ( (p.aPeak - toFloat model.aBase) / 3, (p.tPeak - toFloat model.tBase) / 3 )) pairedPeaks
+                        List.map (\p -> ( (p.aPeak - 164.2734995) / 2.872985178, (p.tPeak - 165.3278104) / 2.907717472 )) pairedPeaks -- empirical
 
                     calculatedAlleleSizes =
-                        List.map (\( aDist, tDist ) -> aDist + tDist + 1) pairedDistances
+                        List.map (\( aDist, tDist ) -> aDist + tDist - 1) pairedDistances
 
                     sortedAlleles =
                         List.sort calculatedAlleleSizes
@@ -314,9 +330,24 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
+
+    let
+        (bestResult, restOfResults) = 
+            case model.results of 
+                r :: tail-> 
+                    case r.evaluation of 
+                        PassedCheckWithScore result -> 
+                            (div [class "main-success"] [viewResult model True r], tail)
+                        _ -> 
+                            (div [class "main-failed"] [text "The input parameters do not correspond with a valid AGG result. See below for all possibilities excluded during this calculation for troubleshooting."], model.results)
+                _ -> 
+                    (div [class "main-failed"] [text "The input parameters do not correspond with a valid AGG result. See below for all possibilities excluded during this calculation for troubleshooting."], model.results)
+
+    in
     div [ class "container" ]
         [ div [ class "left-panel" ]
-            [ h1 [] [ text "AGG Calculator" ]
+            [ h1 [class "title"] [ text "AGGCalculate v1.0" ]
+            , h2 [class "subtitle"] [text "Input the repeat sizes of both alleles:"]
             , div [class "input-group"]
                 [ label [] [ text "Allele 1 Size (rpts)" ]
                 , input [ Html.Attributes.type_ "number", Html.Attributes.value (String.fromInt model.allele1Size), onInput (ChangedAllele1Size << Maybe.withDefault 0 << String.toInt) ] []
@@ -325,18 +356,18 @@ view model =
                 [ label [] [ text "Allele 2 Size (rpts)" ]
                 , input [ Html.Attributes.type_ "number", Html.Attributes.value (String.fromInt model.allele2Size), onInput (ChangedAllele2Size << Maybe.withDefault 0 << String.toInt) ] []
                 ]
+            -- , div [ class "input-group" ]
+            --     [ label [] [ text "A Base Size (bp)" ]
+            --     , input [ Html.Attributes.type_ "number", Html.Attributes.value (String.fromInt model.aBase), onInput (ChangedABase << Maybe.withDefault 0 << String.toInt) ] []
+            --     ]
+            -- , div [ class "input-group" ]
+            --     [ label [] [ text "T Base Size (bp)" ]
+            --     , input [ Html.Attributes.type_ "number", Html.Attributes.value (String.fromInt model.tBase), onInput (ChangedTBase << Maybe.withDefault 0 << String.toInt) ] []
+            --     ]
             , br [] []
-            , div [ class "input-group" ]
-                [ label [] [ text "A Base Size (bp)" ]
-                , input [ Html.Attributes.type_ "number", Html.Attributes.value (String.fromInt model.aBase), onInput (ChangedABase << Maybe.withDefault 0 << String.toInt) ] []
-                ]
-            , div [ class "input-group" ]
-                [ label [] [ text "T Base Size (bp)" ]
-                , input [ Html.Attributes.type_ "number", Html.Attributes.value (String.fromInt model.tBase), onInput (ChangedTBase << Maybe.withDefault 0 << String.toInt) ] []
-                ]
-            , br [] []
+            , p [] [text "Input the peaks detected in the A-primed assay:"]
             , div [class "input-group"]
-                [ label [] [text "A-Primer Reaction Peaks (bp)"]
+                [ label [] [text "A-Primed PCR Peaks (bp)"]
                 , div [style "width" "100%"]
                     (List.indexedMap
                         (\index peak ->
@@ -349,8 +380,10 @@ view model =
                     )
                 , Html.button [ onClick ClickedAddAPeak ] [ text "Add A-Primer Reaction Peak" ]
                 ]
+            , br [] []
+            , p [] [text "Input the peaks detected in the T-primed assay:"]
             , div [class "input-group"]
-                [ label [] [text "T-Primer Reaction Peaks (bp)"]
+                [ label [] [text "T-Primed PCR Peaks (bp)"]
                 , div [style "width" "100%"]
                     (List.indexedMap
                         (\index peak ->
@@ -366,15 +399,16 @@ view model =
             ]
         , div [ class "right-panel" ]
             [ div []
-                [ h1 [] [text "Results" ]
-                , Html.ul [] (List.map (viewResult model) model.results)
+                [ h1 [class "results-title"] [text "Results" ]
+                , div [] [bestResult]
+                , Html.ul [] (List.map (viewResult model False) restOfResults)
                 ]
             ]
         ]
 
 
-viewResult : Model -> CalculatedResult -> Html Msg
-viewResult model result =
+viewResult : Model -> Bool -> CalculatedResult -> Html Msg
+viewResult model isMainResult result =
     case result.evaluation of
         FailedNumberUniqueAlleles alleles ->
             details [class "failed"]
@@ -413,32 +447,56 @@ viewResult model result =
             let
                 groupedPairedDistances = 
                     result.pairedDistances
-                        |> List.map (\ (a, t) -> if abs (a + t - toFloat model.allele1Size) > abs (a + t - toFloat model.allele2Size) then (model.allele2Size, round t + 1) else (model.allele1Size, round t + 1))
+                        |> List.map (\ (a, t) -> if abs (a + t - toFloat model.allele1Size) > abs (a + t - toFloat model.allele2Size) then (model.allele2Size, round t) else (model.allele1Size, round t))
+                        |> List.append [(model.allele1Size, 0), (model.allele2Size, 0)]
                         |> List.Extra.gatherEqualsBy Tuple.first
-                        |> List.map (\( el1, pairs ) -> ( Tuple.first el1, List.map Tuple.second (el1 :: pairs) |> List.sort))
+                        |> List.map (\( el1, pairs ) -> ( Tuple.first el1, List.map Tuple.second (el1 :: pairs) |> List.filter (\x -> x > 0) |> List.sort))
                 viewSizeAndInterrupts ( size, interrupts) = 
+                    let
+                        numInterrupts = List.length interrupts
+                    in
                     div []
-                        [ text <| "The " ++ String.fromInt size ++ " repeat allele has AGG interruptions at position(s): " ++ 
+                        [ text <| "The ", span [class "bold"] [text <| String.fromInt size ++ " repeat"], text <| " allele has ", span [class "bold"] [text <| String.fromInt numInterrupts ++ " AGG interruption(s)"], text <| " at position(s): " ++ 
                             String.join ", " (List.map String.fromInt interrupts)
                         ]
+                viewSizeAndInterruptsSummary (size, interrupts) = 
+                    let
+                        numInterrupts = List.length interrupts
+                    in
+                    div []
+                        [ text <| "The ", span [class "bold"] [text <| String.fromInt size ++ " repeat"], text <| " allele has ", span [class "bold"] [text <| String.fromInt numInterrupts ++ " AGG interruption(s)"], text " = ",
+                            span [class "bold"] [text (toGroupedString size interrupts)]
+                        ]
+                headerText = 
+                    if isMainResult then 
+                        "Most Likely Valid AGG Result"
+                    else
+                        "Other Possible Valid AGG Result"
+
             in
             
-            div [class "passed" ]
-                [ h2 [] [ text "Valid AGG Interruption Result" ]
-                , div [] (List.map viewSizeAndInterrupts groupedPairedDistances)
-                , div [class "passed-details"] 
-                    [ text <| "Evaluation Score (lower is better): " ++ String.fromFloat score
-                    , br [] []
-                    , text "Paired peaks: ", 
-                      text <| String.join ", " (List.map (\p -> "(" ++ String.fromFloat p.aPeak ++ ", " ++ String.fromFloat p.tPeak ++ ")") result.pairedPeaks)
-                    , br [] []
-                    , text "Paired Distances: ",
-                      text <| String.join ", " (List.map (\(a, t) -> "(" ++ String.fromFloat a ++ ", " ++ String.fromFloat t ++ ")") result.pairedDistances)
-                    , br [] []
-                    , text "Calculated Allele Sizes: ",
-                      text <| String.join ", " (List.map String.fromFloat result.calculatedAlleleSizes)
-                    , br [] []
+            div [class "passed", classList [("main-result", isMainResult)] ]
+                [ div [class "passed-header", classList [("main-result", isMainResult)]] [ div [class "passed-header-text"] [text headerText ]]
+                , div [class "passed-body", classList[("main-result", isMainResult)]]
+                [div [] (List.map viewSizeAndInterruptsSummary groupedPairedDistances)
+                    , details  [class "passed-details"] 
+                        [summary [class "passed-details-summary"] [text "Details"]
+                        , div [class "passed-details-additional"] 
+                        [ text <| "Evaluation Score (lower is better): " ++ String.fromFloat score
+                        , br [] []
+                        , text "Paired peaks: ", 
+                        text <| String.join ", " (List.map (\p -> "(" ++ String.fromFloat p.aPeak ++ ", " ++ String.fromFloat p.tPeak ++ ")") result.pairedPeaks)
+                        , br [] []
+                        , text "Paired Distances: ",
+                        text <| String.join ", " (List.map (\(a, t) -> "(" ++ String.fromFloat a ++ ", " ++ String.fromFloat t ++ ")") result.pairedDistances)
+                        , br [] []
+                        , text "Calculated Allele Sizes: ",
+                        text <| String.join ", " (List.map String.fromFloat result.calculatedAlleleSizes)
+                        , br [] []
+                        , div [] (List.map viewSizeAndInterrupts groupedPairedDistances)
+                        ]
                     ]
+                ]
                 ]
 
 
